@@ -140,8 +140,8 @@ class MultiHeadAttention(nn.Module):
         '''
         Reverse the operation of transpose_qkv
         '''
-        X.reshape(-1, self.num_heads, X.shape[1], X.shape[2])
-        X.permute(0, 2, 1, 3)
+        X = X.reshape(-1, self.num_heads, X.shape[1], X.shape[2])
+        X = X.permute(0, 2, 1, 3)
         return X.reshape(X.shape[0], X.shape[1], -1)
 
 
