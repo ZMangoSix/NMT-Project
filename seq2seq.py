@@ -72,12 +72,17 @@ class Seq2SeqDecoder(eder.Decoder):
 class Seq2Seq(eder.EncoderDecoder):
     def __init__(self, encoder, decoder, padding_index, lr):
         super().__init__(encoder, decoder)
-        self.lr = lr
+        self.criteria = nn.CrossEntropyLoss(ignore_index=padding_index)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=lr)
 
 
-    def configure_optimizers(self):
-        # Use Adam optimizer
-        return torch.optim.Adam(self.parameters(), lr=self.lr)
+    def validation_step(self, batch):
+        Y_hat = self(*batch[:-1])
+        self.plot('loss', self.loss(Y_hat, batch[-1]), train=False)
+
+
+    def loss(self, Y_hat, Y):
+        return self.criteria(Y_hat, Y)
 
 
     def predict_step(self, batch, device, num_steps, save_attention_weights=False):

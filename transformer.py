@@ -5,7 +5,6 @@ from torch import nn
 
 from attention import MultiHeadAttention
 from positional_encoding import PositionalEncoding
-from seq2seq import Seq2Seq
 import encoder_decoder as eder
 
 
@@ -104,8 +103,7 @@ class TransformerDecoderBlock(nn.Module):
             batch_size, num_steps, _ = X.shape
             # Shape of dec_valid_lens: (batch_size, num_steps), where every
             # row is [1, 2, ..., num_steps]
-            dec_valid_lens = torch.arange(
-                1, num_steps + 1, device=X.device).repeat(batch_size, 1)
+            dec_valid_lens = torch.arange(1, num_steps + 1, device=X.device).repeat(batch_size, 1)
         else:
             dec_valid_lens = None
         # Self-attention
@@ -174,6 +172,7 @@ if __name__ == '__main__':
 
     decoder = TransformerDecoder(200, 24, 48, 8, 2, 0.5)
 
+    from seq2seq import Seq2Seq
     model = Seq2Seq(encoder, decoder, 0, 0.001)
 
     print(model)
