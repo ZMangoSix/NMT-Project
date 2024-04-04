@@ -37,7 +37,7 @@ class DataSet():
 
 
     def tokenize(self):
-        tokenized_input = self.tokenizer(self.srcs[:3], text_target=self.tgts[:3],
+        tokenized_input = self.tokenizer(self.srcs, text_target=self.tgts,
                                          padding='max_length', truncation=True, max_length=self.max_length,
                                          return_tensors="pt")
 

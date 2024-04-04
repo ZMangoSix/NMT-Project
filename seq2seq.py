@@ -76,11 +76,6 @@ class Seq2Seq(eder.EncoderDecoder):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=lr)
 
 
-    def validation_step(self, batch):
-        Y_hat = self(*batch[:-1])
-        self.plot('loss', self.loss(Y_hat, batch[-1]), train=False)
-
-
     def loss(self, Y_hat, Y):
         return self.criteria(Y_hat, Y)
 
