@@ -96,9 +96,9 @@ class Seq2Seq(eder.EncoderDecoder):
 
 
 
-def bleu(pred_seq, label_seq, k):
+def bleu(pred_tokens, label_tokens, k):
     """Compute the BLEU."""
-    pred_tokens, label_tokens = pred_seq.split(' '), label_seq.split(' ')
+    # pred_tokens, label_tokens = pred_seq.split(' '), label_seq.split(' ')
     len_pred, len_label = len(pred_tokens), len(label_tokens)
     score = math.exp(min(0, 1 - len_label / len_pred))
     for n in range(1, min(k, len_pred) + 1):
