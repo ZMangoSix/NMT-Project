@@ -1,5 +1,7 @@
 import os
 import torch
+import xml.etree.ElementTree as ET
+
 from transformers import MarianTokenizer
 
 
@@ -48,7 +50,17 @@ class DataSet():
 
         return tokenized_input, decoder_input_ids
 
+    def read_xml(self, filename):
+        # Parse the XML file
+        tree = ET.parse(filename)
+        root = tree.getroot()
 
+        # Find all the <seg> elements and print their text content
+        # for seg in root.findall('.//seg'):
+        #     print(seg.text)
+        print(root.tag)
+        for child in root:
+            print(child.tag, child.attrib)
 
 
 if __name__ == '__main__':
