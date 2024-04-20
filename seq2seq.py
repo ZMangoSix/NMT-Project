@@ -1,8 +1,10 @@
 import collections
 import math
+
 import torch
 from torch import nn
 from torch.nn import functional as F
+from evaluate import load
 
 import encoder_decoder as eder
 from GRU import GRU
@@ -95,6 +97,61 @@ class Seq2Seq(eder.EncoderDecoder):
         return torch.cat(outputs[1:], 1), attention_weights
 
 
+    def beam_search(self, batch, device, beam_width, max_length):
+        # Encode the source sentence
+        batch = [a.to(device) for a in batch]
+        src, tgt, src_valid_len, _ = batch
+        batch_size = tgt.shape[0]
+        enc_all_outputs = self.encoder(src, src_valid_len)
+        first = tgt[:, (0)].unsqueeze(1)
+
+        # Init beams
+        beams = []
+        for i in range(batch_size):
+            tmp_state = self.decoder.init_state(enc_all_outputs[i, :].unsqueeze(0), src_valid_len[i].unsqueeze(0))
+            beams.append( [([first[i, :].unsqueeze(1)], tmp_state, 1.0)] )
+
+        for _ in range(max_length):
+            new_beams = [[] for _ in range(batch_size)]
+
+            # Decode next token for each beam in the batch
+            for i in range(batch_size):
+                start = True
+                for sequence, dec_state, score in beams[i]:
+                    if sequence[-1] == 0 and start: # 0 is the end token
+                        start = False
+                    elif sequence[-1] == 0 and not start: # 0 is the end token
+                        # If end token already generated, keep sequence as is
+                        new_beams[i].append((sequence, score))
+                        continue
+
+                    # Decode next token for the sample
+                    decoder_output, new_dec_state = self.decoder(sequence[-1], dec_state)
+
+                    # Get top-k tokens and their probabilities
+                    # topk_probs, topk_tokens = torch.topk(F.softmax(decoder_output, dim=-1), k=beam_width)
+                    topk_probs, topk_tokens = torch.topk(decoder_output, k=beam_width)
+                    topk_probs = topk_probs.squeeze().tolist()
+                    topk_tokens = topk_tokens.squeeze().tolist()
+
+                    # Expand beam with new candidate sequences
+                    for prob, token in zip(topk_probs, topk_tokens):
+                        new_sequence = sequence + [torch.tensor(token, dtype=int, device=device).view(1, 1)]
+                        new_score = score * prob
+                        new_beams[i].append((new_sequence, new_dec_state, new_score))
+
+                    # Prune beam for the sample to keep top-k sequences
+                    new_beams[i].sort(key=lambda x: x[2], reverse=True)
+                    new_beams[i] = new_beams[i][:beam_width]
+
+            beams = new_beams
+
+        # Select sequences with highest scores as final translations for each sample
+        final_translations = [torch.cat(max(beam, key=lambda x: x[2])[0][1:], 1).squeeze(0) for beam in beams]
+        return final_translations
+
+
+
 
 def bleu(pred_tokens, label_tokens, k):
     """Compute the BLEU."""
@@ -110,6 +167,15 @@ def bleu(pred_tokens, label_tokens, k):
                 num_matches += 1
                 label_subs[' '.join(pred_tokens[i: i + n])] -= 1
         score *= math.pow(num_matches / (len_pred - n + 1), math.pow(0.5, n))
+    return score
+
+
+def bert_score(pred_tokens, label_tokens, lang="fr"):
+    """Compute the BERT socre"""
+    bertscore = load("bertscore")
+    predictions = [pred_tokens]
+    references = [label_tokens]
+    score = bertscore.compute(predictions=predictions, references=references, lang=lang)
     return score
 
 

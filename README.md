@@ -8,7 +8,7 @@ The project is based on the python (3.9.15) and Pytorch (>=2.0.1).
 
 Hugging Face is also used for text tokenization. To use the related function, one has to install the following packages
 ```
-pip install transformers sentencepiece sacremoses
+pip install transformers sentencepiece sacremoses evaluate
 ```
 The encoder-decoder architecture is used for machine translation tasks.
 
