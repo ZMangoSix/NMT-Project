@@ -50,17 +50,24 @@ class DataSet():
 
         return tokenized_input, decoder_input_ids
 
-    def read_xml(self, filename):
+    def read_xml(self, file_tgt, file_src): 
         # Parse the XML file
-        tree = ET.parse(filename)
-        root = tree.getroot()
+        tree_tgt = ET.parse(file_tgt)
+        root_tgt = tree_tgt.getroot()
+        tree_src = ET.parse(file_src)
+        root_src = tree_src.getroot()
 
         # Find all the <seg> elements and print their text content
-        # for seg in root.findall('.//seg'):
-        #     print(seg.text)
-        print(root.tag)
-        for child in root:
-            print(child.tag, child.attrib)
+        for seg in root_tgt.findall('.//seg'):
+            target = seg.text
+        for seg in root_src.findall('.//seg'):
+            source = seg.text
+        # print(root.tag)
+        # for child in root:
+        #     print(child.tag, child.attrib)
+        self.srcs.append(''.join(source))
+        self.tgts.append(''.join(target))
+        print(f'Total number of samples: {len(self.srcs)}')
 
 
 if __name__ == '__main__':
