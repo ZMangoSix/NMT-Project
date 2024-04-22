@@ -32,7 +32,7 @@ class DataSet():
                 target = [' ' + char if i > 0 and no_space(char, target[i - 1]) else char
                           for i, char in enumerate(target.lower())]
                 self.srcs.append(''.join(source))
-                
+                self.tgts.append(''.join(target))
         print(f'Total number of samples: {len(self.srcs)}')
         
         # print(self.srcs[:10])
