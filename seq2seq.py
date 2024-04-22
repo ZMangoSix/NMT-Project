@@ -97,7 +97,7 @@ class Seq2Seq(eder.EncoderDecoder):
         return torch.cat(outputs[1:], 1), attention_weights
 
 
-    def beam_search(self, batch, device, beam_width, max_length):
+    def beam_search(self, batch, device, beam_width, max_length, eos_id=0):
         # Encode the source sentence
         batch = [a.to(device) for a in batch]
         src, tgt, src_valid_len, _ = batch
@@ -118,11 +118,11 @@ class Seq2Seq(eder.EncoderDecoder):
             for i in range(batch_size):
                 start = True
                 for sequence, dec_state, score in beams[i]:
-                    if sequence[-1] == 0 and start: # 0 is the end token
+                    if sequence[-1] == eos_id and start: # 0 is the end token
                         start = False
-                    elif sequence[-1] == 0 and not start: # 0 is the end token
+                    elif sequence[-1] == eos_id and not start: # 0 is the end token
                         # If end token already generated, keep sequence as is
-                        new_beams[i].append((sequence, score))
+                        new_beams[i].append((sequence, dec_state, score))
                         continue
 
                     # Decode next token for the sample

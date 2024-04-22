@@ -13,7 +13,8 @@ class DataSet():
         self.tokens = list()
         self.max_length = max_length
         # Use marianTokenizer, translation source to target language (Default is en -> fr)
-        self.tokenizer = MarianTokenizer.from_pretrained(f'Helsinki-NLP/opus-mt-{source}-{target}')
+        self.tokenizer = MarianTokenizer.from_pretrained(f'Helsinki-NLP/opus-mt-{source}-{target}', bos_token='<bos>')
+        self.bos_index = self.tokenizer.convert_tokens_to_ids('<bos>')
 
         self.vocab_size = self.tokenizer.vocab_size
 
@@ -46,7 +47,7 @@ class DataSet():
 
         # Shift the decoder input by one index
         decoder_input_ids = tokenized_input['labels'][:, :-1].contiguous()
-        tmp = torch.zeros([decoder_input_ids.shape[0], 1], dtype=torch.long)
+        tmp = torch.full([decoder_input_ids.shape[0], 1], self.bos_index, dtype=torch.long)
         decoder_input_ids = torch.cat([tmp, decoder_input_ids], dim=1)
 
         return tokenized_input, decoder_input_ids
