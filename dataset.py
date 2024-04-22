@@ -7,13 +7,13 @@ from transformers import MarianTokenizer
 
 # Currently used for Tatoeba Project only
 class DataSet():
-    def __init__(self, max_length=16):
+    def __init__(self, max_length=16, source='en', target='fr'):
         self.srcs = list()
         self.tgts = list()
         self.tokens = list()
         self.max_length = max_length
-        # Maybe define a tokenizer here?
-        self.tokenizer = MarianTokenizer.from_pretrained("Helsinki-NLP/opus-mt-en-fr")
+        # Use marianTokenizer, translation source to target language (Default is en -> fr)
+        self.tokenizer = MarianTokenizer.from_pretrained(f'Helsinki-NLP/opus-mt-{source}-{target}')
 
         self.vocab_size = self.tokenizer.vocab_size
 
