@@ -32,8 +32,9 @@ class DataSet():
                 target = [' ' + char if i > 0 and no_space(char, target[i - 1]) else char
                           for i, char in enumerate(target.lower())]
                 self.srcs.append(''.join(source))
-                self.tgts.append(''.join(target))
+                
         print(f'Total number of samples: {len(self.srcs)}')
+        
         # print(self.srcs[:10])
         # print(self.tgts[:10])
 
@@ -52,7 +53,6 @@ class DataSet():
 
     def read_xml(self, file_tgt, file_src): 
         # Parse the XML file
-<<<<<<< Updated upstream
         tree_tgt = ET.parse(file_tgt)
         root_tgt = tree_tgt.getroot()
         tree_src = ET.parse(file_src)
@@ -61,27 +61,17 @@ class DataSet():
         # Find all the <seg> elements and print their text content
         for seg in root_tgt.findall('.//seg'):
             target = seg.text
+            self.tgts.append(''.join(target))
         for seg in root_src.findall('.//seg'):
             source = seg.text
+            self.srcs.append(''.join(source))
         # print(root.tag)
         # for child in root:
         #     print(child.tag, child.attrib)
-        self.srcs.append(''.join(source))
-        self.tgts.append(''.join(target))
-        print(f'Total number of samples: {len(self.srcs)}')
-=======
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        # print(root.tag)
-        # for child in root:
-        #     print(child.tag, child.attrib)
-        # Find all <seg> elements and print their 'id' attribute and text content
-        for seg in root.findall('.//seg'):
-            seg_id = seg.get('id')
-            seg_text = seg.text.strip()  # .strip() removes leading/trailing whitespace
-            print(f'ID: {seg_id}, Text: {seg_text}')
->>>>>>> Stashed changes
-
+        
+        print(f'Total number of source samples: {len(self.srcs)}')
+        print(f'Total number of targetsamples: {len(self.tgts)}')
+        
 
 if __name__ == '__main__':
     data = DataSet()
