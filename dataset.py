@@ -52,6 +52,7 @@ class DataSet():
 
     def read_xml(self, file_tgt, file_src): 
         # Parse the XML file
+<<<<<<< Updated upstream
         tree_tgt = ET.parse(file_tgt)
         root_tgt = tree_tgt.getroot()
         tree_src = ET.parse(file_src)
@@ -68,6 +69,18 @@ class DataSet():
         self.srcs.append(''.join(source))
         self.tgts.append(''.join(target))
         print(f'Total number of samples: {len(self.srcs)}')
+=======
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        # print(root.tag)
+        # for child in root:
+        #     print(child.tag, child.attrib)
+        # Find all <seg> elements and print their 'id' attribute and text content
+        for seg in root.findall('.//seg'):
+            seg_id = seg.get('id')
+            seg_text = seg.text.strip()  # .strip() removes leading/trailing whitespace
+            print(f'ID: {seg_id}, Text: {seg_text}')
+>>>>>>> Stashed changes
 
 
 if __name__ == '__main__':
