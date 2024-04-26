@@ -9,6 +9,10 @@ __pycache__/
 # Vim
 *.swp
 
+# local
+models/
+*.pdf
+
 # Distribution / packaging
 .Python
 build/

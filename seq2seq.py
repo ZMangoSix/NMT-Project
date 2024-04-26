@@ -97,7 +97,7 @@ class Seq2Seq(eder.EncoderDecoder):
         return torch.cat(outputs[1:], 1), attention_weights
 
 
-    def beam_search(self, batch, device, beam_width, max_length, eos_id=0):
+    def beam_search(self, batch, device, beam_width, max_length, is_RNN=False, eos_id=0):
         # Encode the source sentence
         batch = [a.to(device) for a in batch]
         src, tgt, src_valid_len, _ = batch
@@ -107,9 +107,15 @@ class Seq2Seq(eder.EncoderDecoder):
 
         # Init beams
         beams = []
-        for i in range(batch_size):
-            tmp_state = self.decoder.init_state(enc_all_outputs[i, :].unsqueeze(0), src_valid_len[i].unsqueeze(0))
-            beams.append( [([first[i, :].unsqueeze(1)], tmp_state, 1.0)] )
+        if is_RNN:
+            for i in range(batch_size):
+                tmp_enc_output = (enc_all_outputs[0][:, i, :].unsqueeze(1).contiguous(), enc_all_outputs[1][:, i, :].unsqueeze(1).contiguous())
+                tmp_state = self.decoder.init_state(tmp_enc_output, src_valid_len[i].unsqueeze(0))
+                beams.append( [([first[i, :].unsqueeze(1)], tmp_state, 1.0)] )
+        else:
+            for i in range(batch_size):
+                tmp_state = self.decoder.init_state(enc_all_outputs[i].unsqueeze(0), src_valid_len[i].unsqueeze(0))
+                beams.append( [([first[i, :].unsqueeze(1)], tmp_state, 1.0)] )
 
         for _ in range(max_length):
             new_beams = [[] for _ in range(batch_size)]
@@ -134,11 +140,24 @@ class Seq2Seq(eder.EncoderDecoder):
                     topk_probs = topk_probs.squeeze().tolist()
                     topk_tokens = topk_tokens.squeeze().tolist()
 
+                    # print(topk_probs, topk_tokens)
+
                     # Expand beam with new candidate sequences
-                    for prob, token in zip(topk_probs, topk_tokens):
-                        new_sequence = sequence + [torch.tensor(token, dtype=int, device=device).view(1, 1)]
-                        new_score = score * prob
+                    if beam_width == 1:
+                        if is_RNN:
+                            new_sequence = sequence + [torch.tensor(topk_tokens, dtype=int, device=device).view(1, 1)]
+                        else:
+                            new_sequence = sequence + [torch.tensor(topk_tokens, dtype=int, device=device).view(1, 1)]
+                        new_score = score * topk_probs
                         new_beams[i].append((new_sequence, new_dec_state, new_score))
+                    else:
+                        for prob, token in zip(topk_probs, topk_tokens):
+                            if is_RNN:
+                                new_sequence = sequence + [torch.tensor(token, dtype=int, device=device).view(1, 1)]
+                            else:
+                                new_sequence = sequence + [torch.tensor(token, dtype=int, device=device).view(1, 1)]
+                            new_score = score * prob
+                            new_beams[i].append((new_sequence, new_dec_state, new_score))
 
                     # Prune beam for the sample to keep top-k sequences
                     new_beams[i].sort(key=lambda x: x[2], reverse=True)
@@ -175,7 +194,8 @@ def bert_score(pred_tokens, label_tokens, lang="fr"):
     bertscore = load("bertscore")
     predictions = [pred_tokens]
     references = [label_tokens]
-    score = bertscore.compute(predictions=predictions, references=references, lang=lang)
+    # score = bertscore.compute(predictions=predictions, references=references, lang=lang)
+    score = bertscore.compute(predictions=predictions, references=references, model_type="distilbert-base-uncased")
     return score
 
 
@@ -196,9 +216,6 @@ if __name__ == '__main__':
     dec_outputs, state = decoder(X, state)
     print(dec_outputs.shape, (batch_size, num_steps, vocab_size))
     print(state[1].shape, (num_layers, batch_size, num_hiddens))
-    # d2l.check_shape(dec_outputs, (batch_size, num_steps, vocab_size))
-    # d2l.check_shape(state[1], (num_layers, batch_size, num_hiddens))
-
 
     model = Seq2Seq(encoder, decoder, 0, 0.005)
     print(model)
